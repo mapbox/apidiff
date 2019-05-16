@@ -47,8 +47,18 @@ public func diffreport(oldApi: JSONObject, newApi: JSONObject) throws -> [String
 
   for usr in (addedApiNames.map { usr in newApiNameNodeMap[usr]! }.sorted(by: apiNodeIsOrderedBefore)) {
     let apiType = prettyString(forKind: usr["key.kind"] as! String)
-    let name = prettyName(forApi: usr, apis: newApiNameNodeMap)
+    var name = prettyName(forApi: usr, apis: newApiNameNodeMap)
     let root = rootName(forApi: usr, apis: newApiNameNodeMap)
+    if let comment = usr["key.doc.comment"] as? String {
+        if comment.contains(":nodoc:") {
+            name = "\(name) + nodoc"
+            //continue
+        }
+    } else {
+        // Ignore implicitly undocumented declarations.
+        name = "\(name) + undoc"
+        //continue
+    }
     changes[root, withDefault: []].append(.addition(apiType: apiType, name: name))
   }
 
@@ -56,8 +66,18 @@ public func diffreport(oldApi: JSONObject, newApi: JSONObject) throws -> [String
 
   for usr in (deletedApiNames.map { usr in oldApiNameNodeMap[usr]! }.sorted(by: apiNodeIsOrderedBefore)) {
     let apiType = prettyString(forKind: usr["key.kind"] as! String)
-    let name = prettyName(forApi: usr, apis: oldApiNameNodeMap)
+    var name = prettyName(forApi: usr, apis: oldApiNameNodeMap)
     let root = rootName(forApi: usr, apis: oldApiNameNodeMap)
+    if let comment = usr["key.doc.comment"] as? String {
+        if comment.contains(":nodoc:") {
+            name = "\(name) + nodoc"
+            //continue
+        }
+    } else {
+        // Ignore implicitly undocumented declarations.
+        name = "\(name) + undoc"
+        //continue
+    }
     changes[root, withDefault: []].append(.deletion(apiType: apiType, name: name))
   }
 
@@ -77,12 +97,23 @@ public func diffreport(oldApi: JSONObject, newApi: JSONObject) throws -> [String
       }
       if let oldValue = oldApi[key] as? String, let newValue = newApi[key] as? String, oldValue != newValue {
         let apiType = prettyString(forKind: newApi["key.kind"] as! String)
-        let name = prettyName(forApi: newApi, apis: newApiNameNodeMap)
+        var name = prettyName(forApi: newApi, apis: newApiNameNodeMap)
         let modificationType = prettyString(forModificationKind: key)
         if apiType == "class" && key == "key.parsed_declaration" {
           // Ignore declarations for classes because it's a complete representation of the class's
           // code, which is not helpful diff information.
           continue
+        }
+        if let comment = newApi["key.doc.comment"] as? String {
+            // Ignore explicitly undocumented declarations.
+            if comment.contains(":nodoc:") {
+                //name = "\(name) + nodoc"
+                //continue
+            }
+        } else {
+            // Ignore implicitly undocumented declarations.
+            //name = "\(name) + undoc"
+            //continue
         }
         changes[root, withDefault: []].append(.modification(apiType: apiType,
                                                             name: name,
@@ -279,6 +310,8 @@ func extractAPINodeMap(from sourceKittenNode: SourceKittenNode, parentUsr: Strin
           continue
         }
       } else if let kind = sourceKittenNode["key.kind"] as? String, kind == "source.lang.swift.decl.extension" {
+        continue
+      } else if let comment = sourceKittenNode["key.doc.comment"] as? String, comment.contains(":nodoc:") {
         continue
       }
       var node = apiNode(from: sourceKittenNode)
