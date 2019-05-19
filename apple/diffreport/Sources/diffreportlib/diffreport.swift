@@ -29,6 +29,58 @@ public enum ApiChange {
   case modification(apiType: String, name: String, modificationType: String, from: String, to: String)
 }
 
+extension ApiChange: Codable {
+    enum CodingKeys: CodingKey {
+        case diff, apiType, name, modifications
+    }
+
+    enum Diff: String, Codable {
+        case addition, deletion, modification
+    }
+
+    struct Modifications: Codable {
+        let modificationType: String
+        let from: String
+        let to: String
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .addition(let apiType, let name):
+            try container.encode(Diff.addition, forKey: .diff)
+            try container.encode(apiType, forKey: .apiType)
+            try container.encode(name, forKey: .name)
+        case .deletion(let apiType, let name):
+            try container.encode(Diff.deletion, forKey: .diff)
+            try container.encode(apiType, forKey: .apiType)
+            try container.encode(name, forKey: .name)
+        case .modification(let apiType, let name, let modificationType, let from, let to):
+            try container.encode(Diff.modification, forKey: .diff)
+            try container.encode(apiType, forKey: .apiType)
+            try container.encode(name, forKey: .name)
+            try container.encode(Modifications(modificationType: modificationType, from: from, to: to), forKey: .modifications)
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let diff = try container.decode(Diff.self, forKey: .diff)
+        let apiType = try container.decode(String.self, forKey: .apiType)
+        let name = try container.decode(String.self, forKey: .name)
+
+        switch diff {
+        case .addition:
+            self = .addition(apiType: apiType, name: name)
+        case .deletion:
+            self = .deletion(apiType: apiType, name: name)
+        case .modification:
+            let modifications = try container.decode(Modifications.self, forKey: .modifications)
+            self = .modification(apiType: apiType, name: name, modificationType: modifications.modificationType, from: modifications.from, to: modifications.to)
+        }
+    }
+}
+
 /** Generates an API diff report from two SourceKitten JSON outputs. */
 public func diffreport(oldApi: JSONObject, newApi: JSONObject) throws -> [String: [ApiChange]] {
   let oldApiNameNodeMap = extractAPINodeMap(from: oldApi as! [SourceKittenNode])
@@ -131,12 +183,12 @@ extension ApiChange {
   public func toMarkdown() -> String {
     switch self {
     case .addition(let apiType, let name):
-      return "*added* \(apiType): \(name)"
+      return "*added* \(apiType): `\(name)`"
     case .deletion(let apiType, let name):
-      return "*removed* \(apiType): \(name)"
+      return "*removed* \(apiType): `\(name)`"
     case .modification(let apiType, let name, let modificationType, let from, let to):
       return [
-        "*modified* \(apiType): \(name)",
+        "*modified* \(apiType): `\(name)`",
         "",
         "| Type of change: | \(modificationType) |",
         "|---|---|",
@@ -267,11 +319,11 @@ func prettyName(forApi api: APINode, apis: ApiNameNodeMap) -> String {
   if let parentUsr = api["parent.usr"] as? String, let parentApi = apis[parentUsr] {
     if name.hasPrefix("-") || name.hasPrefix("+") {
         let methodPrefix = name.prefix(1)
-        return "`\(methodPrefix)[\(parentApi["key.name"]!) \(name.dropFirst())]`"
+        return "\(methodPrefix)[\(parentApi["key.name"]!) \(name.dropFirst())]"
     }
-    return "`\(parentApi["key.name"]!).\(name)`"
+    return "\(parentApi["key.name"]!).\(name)"
   }
-  return "`\(name)`"
+  return name
 }
 
 /** Normalize data contained in an API node json dictionary. */
