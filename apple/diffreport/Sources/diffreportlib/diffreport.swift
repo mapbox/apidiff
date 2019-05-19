@@ -131,7 +131,7 @@ extension ApiChange {
   public func toMarkdown() -> String {
     switch self {
     case .addition(let apiType, let name):
-      return "*new* \(apiType): \(name)"
+      return "*added* \(apiType): \(name)"
     case .deletion(let apiType, let name):
       return "*removed* \(apiType): \(name)"
     case .modification(let apiType, let name, let modificationType, let from, let to):
@@ -265,7 +265,11 @@ func rootName(forApi api: APINode, apis: ApiNameNodeMap) -> String {
 func prettyName(forApi api: APINode, apis: ApiNameNodeMap) -> String {
   let name = api["key.name"] as! String
   if let parentUsr = api["parent.usr"] as? String, let parentApi = apis[parentUsr] {
-    return "`\(name)` in \(prettyName(forApi: parentApi, apis: apis))"
+    if name.hasPrefix("-") || name.hasPrefix("+") {
+        let methodPrefix = name.prefix(1)
+        return "`\(methodPrefix)[\(parentApi["key.name"]!) \(name.dropFirst())]`"
+    }
+    return "`\(parentApi["key.name"]!).\(name)`"
   }
   return "`\(name)`"
 }
