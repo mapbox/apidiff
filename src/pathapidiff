@@ -57,6 +57,8 @@ apidiff_objc() {
     exit 1
   fi
 
+  output_flavor="$2"
+
   escaped_old_path=$(echo "$OLD_PATH" | sed "s:/:\\\\\\\\/:g")
   escaped_new_path=$(echo "$NEW_PATH" | sed "s:/:\\\\\\\\/:g")
 
@@ -70,7 +72,7 @@ apidiff_objc() {
 
   pushd apple/diffreport > /dev/null
   swift build > /dev/null 2>> "$ERROR_LOG"
-  swift run diffreport "$TMP_PATH/old_apis" "$TMP_PATH/new_apis" 2>> "$ERROR_LOG"
+  swift run diffreport "$TMP_PATH/old_apis" "$TMP_PATH/new_apis" "$output_flavor" 2>> "$ERROR_LOG"
   popd > /dev/null
 }
 

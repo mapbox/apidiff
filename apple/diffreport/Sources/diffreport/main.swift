@@ -39,17 +39,17 @@ let newApi = try readJsonObject(fromFilePath: ProcessInfo.processInfo.arguments[
 
 let report = try diffreport(oldApi: oldApi, newApi: newApi)
 
-// Generate markdown output
+if (ProcessInfo.processInfo.arguments[3...].contains("--json")) {
+  // Generate JSON output
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = .prettyPrinted
 
-for (symbol, entries) in report {
-  print("\n### \(symbol)\n")
-  print(entries.map({ change in change.toMarkdown() }).joined(separator: "\n\n"))
+  let data = try encoder.encode(report)
+  print(String(data: data, encoding: .utf8)!)
+} else {
+  // Generate markdown output
+  for (symbol, entries) in report {
+    print("\n### \(symbol)\n")
+    print(entries.map({ change in change.toMarkdown() }).joined(separator: "\n\n"))
+  }
 }
-
-// Generate JSON output
-
-let encoder = JSONEncoder()
-encoder.outputFormatting = .prettyPrinted
-
-let data = try encoder.encode(report)
-print(String(data: data, encoding: .utf8)!)
