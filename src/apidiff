@@ -21,7 +21,6 @@ usage() {
   echo
   echo "    apidiff <old git ref> <new git ref> objc <umbrella header>"
   echo "    apidiff <old git ref> <new git ref> swift <workspace path> <module name>"
-  echo "    apidiff <old git ref> <new git ref> android <library>"
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

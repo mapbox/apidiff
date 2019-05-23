@@ -1,3 +1,0 @@
-[submodule "third_party/jardiff"]
-	path = third_party/jardiff
-	url = https://github.com/JakeWharton/jardiff.git

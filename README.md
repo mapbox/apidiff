@@ -1,9 +1,6 @@
 # API diff
 
-[![Build Status](https://travis-ci.org/material-motion/material-motion-apidiff.svg?branch=develop)](https://travis-ci.org/material-motion/material-motion-apidiff)
-[![codecov](https://codecov.io/gh/material-motion/material-motion-apidiff/branch/develop/graph/badge.svg)](https://codecov.io/gh/material-motion/material-motion-apidiff)
-
-An API diff tool for Objective-C, Swift, and Android code that outputs markdown.
+An API diff tool for Objective-C and Swift code that outputs markdown.
 
 ## Requirements
 
@@ -18,7 +15,6 @@ Run `apidiff` from within a git repository like so:
 
     apidiff <old git ref> <new git ref> objc <umbrella header>
     apidiff <old git ref> <new git ref> swift <workspace path> <scheme name>
-    apidiff <old git ref> <new git ref> android <library>
 
 Note that all paths must be relative to the root of the git repository. For example:
 

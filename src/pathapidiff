@@ -21,7 +21,6 @@ usage() {
   echo
   echo "    pathapidiff <old source path> <new source path> objc <umbrella header>"
   echo "    pathapidiff <old source path> <new source path> swift <workspace path> <module name>"
-  echo "    pathapidiff <old source path> <new source path> android <library>"
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -136,37 +135,9 @@ apidiff_swift() {
   popd > /dev/null
 }
 
-apidiff_java() {
-  library="$1"
-
-  if [[ -z "$library" ]]; then
-    usage
-    exit 1
-  fi
-
-  case "$ENGINE" in
-    android) artifact="$library/build/outputs/aar/$library-debug.aar" ;;
-    java)    artifact="$library/build/libs/$library.jar" ;;
-    *)       exit 1 ;;
-  esac
-
-  pushd "$OLD_PATH" >> /dev/null
-  ./gradlew ":$library:build" &>/dev/null || { echo "ERROR: Failed to build $OLD_COMMIT."; exit 1; }
-  old_artifact="$OLD_PATH/$artifact"
-  popd >> /dev/null
-
-  pushd "$NEW_PATH" >> /dev/null
-  ./gradlew ":$library:build" &>/dev/null || { echo "ERROR: Failed to build $NEW_COMMIT."; exit 1; }
-  new_artifact="$NEW_PATH/$artifact"
-  popd >> /dev/null
-
-  "$ROOT/third_party/jardiff/jardiff.py" "$old_artifact" "$new_artifact" "$ROOT/java/markdowndiff.py"
-}
-
 case "$ENGINE" in
   objc)         apidiff_objc "${@:4}" ;;
   swift)        apidiff_swift "${@:4}" ;;
-  android|java) apidiff_java "${@:4}" ;;
   *)            usage ;;
 esac
 
