@@ -26,6 +26,7 @@ class UnitTests: XCTestCase {
     ("testAddition", testAddition),
     ("testDeletion", testDeletion),
     ("testModification", testModification),
+    ("testIgnoreUnexposed", testIgnoreUnexposed),
   ]
   
   func testNoChanges() throws {
@@ -99,6 +100,11 @@ class UnitTests: XCTestCase {
     XCTAssertEqual(report["MDCAlertControllerView"]!.first!,
                    .addition(apiType: "property",
                              name: "`buttonInkColor` in `MDCAlertControllerView`"))
+  }
+
+  func testIgnoreUnexposed() throws {
+      let report = try generateReport(forOld: ";", new: "")
+      XCTAssert(report.isEmpty)
   }
 
   let oldPath = ProcessInfo.processInfo.environment["TMPDIR"]!.appending("old/Header.h")
