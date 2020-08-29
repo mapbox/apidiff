@@ -370,7 +370,7 @@ func extractAPINodeMap(from sourceKittenNode: SourceKittenNode, parentUsr: Strin
         continue
       } else if let comment = sourceKittenNode["key.doc.comment"] as? String, comment.contains(":nodoc:") {
         continue
-      } else if let kind = sourceKittenNode["key.kind"] as? String, kind == "source.lang.objc.decl.unexposed" {
+      } else if let kind = sourceKittenNode["key.kind"] as? String, kind == "sourcekitten.source.lang.objc.decl.unexposed" {
         continue
       }
       var node = apiNode(from: sourceKittenNode)
